@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</head>
+<body>
+    <h1>User Data</h1>
+    <div id="userData"></div>
+
+    <!-- Update User Modal -->
+<div class="modal" id="updateModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Update User</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="updateForm">
+            <input type="hidden" id="userId">
+            <div class="form-group">
+              <label for="userEmail">Email</label>
+              <input type="email" class="form-control" id="userEmail" placeholder="Email">
+            </div>
+            <div class="form-group">
+              <label for="userName">Name</label>
+              <input type="text" class="form-control" id="userName" placeholder="Name">
+            </div>
+            <div class="form-group">
+              <label for="userPassword">Password</label>
+              <input type="password" class="form-control" id="userPassword" placeholder="Password">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" onclick="submitUpdate()">Save changes</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <script>
+        const fetchData = async () => {
+            try {
+                const response = await fetch("http://localhost/test/practice/users.php");
+                if(!response.ok) throw new Error("Network response was not ok");
+
+                const data = await response.json();
+
+                const userDataDiv = document.getElementById('userData');
+                userDataDiv.innerHTML = ''; // Clear existing content
+
+                data.forEach(user => {
+                    userDataDiv.innerHTML += `
+                    <p>
+                        
+                        <input type="hidden" id="userid" value="${user.id}">
+                        <input type="text" id="email" value="${user.email}">
+                        <input type="text" id="name" value="${user.name}">
+                        <input type="text" id="password" value="${user.password}"><br>
+                        <button onclick="updateUser(${user.id}, '${user.email}', '${user.name}', '${user.password}')">Update</button>
+                        <button onclick="deleteUser(${user.id})">Delete</button>
+                    </p>
+                    <hr>`;
+                });
+            } catch (error) {
+                console.log("fetch error: ", error);
+            }
+        }
+
+        // update user
+        const updateUser = (id, email, name, password) => {
+    // Get the modal input elements
+    const userIdField = document.getElementById('userId');
+    const userEmailField = document.getElementById('email');
+    const userNameField = document.getElementById('name');
+    const userPasswordField = document.getElementById('password');
+
+    // Set values to the input fields
+    userIdField.value = id;
+    userEmailField.value = email;
+    userNameField.value = name;
+    userPasswordField.value = password;
+
+    // Display the modal using Bootstrap 5 native JavaScript
+    const modal = new bootstrap.Modal(document.getElementById('updateModal'));
+    modal.show();
+};
+
+
+        // Function to handle the update submission
+  const submitUpdate = async () => {
+    const id = document.getElementById('userId').value;
+    const email = document.getElementById('userEmail').value;
+    const name = document.getElementById('userName').value;
+    const password = document.getElementById('userPassword').value;
+
+    // Send data to the server for updating
+    try {
+      const response = await fetch('http://localhost/test/practice/updateUser.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id, email, name, password })
+      });
+
+      const result = await response.json();
+      console.log(result);
+
+      if (result.success) {
+        // Do something on successful update, e.g., close modal and refresh user list
+        $('#updateModal').modal('hide');
+        fetchData(); // Refresh data after updating
+      } else {
+        console.log('Update failed:', result.message);
+      }
+
+    } catch (error) {
+      console.log('Error while updating:', error);
+    }
+  }
+
+        // delete user function
+        const deleteUser = async (id) => {
+
+            try {
+            const response = await fetch('http://localhost/test/practice/deleteUser.php', {
+                method: 'POST',
+                // headers: {
+                //     'Content-Type': 'application/json'
+                // },
+                body: JSON.stringify({id: id})
+            });
+            
+            let result = await response.json();
+            console.log(result);
+
+            } catch (error) {
+                console.log("Theres an error: ", error);
+            }
+        }
+
+        fetchData();
+        // setInterval(fetchData, 1000);
+    </script>
+  
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</body>
+</html>
